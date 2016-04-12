@@ -4,8 +4,8 @@ $(function(){
   //Grab the place holder website
   $.ajax({
     method: "POST",
-    url: "/crawl",
-    data: { url : "http://benv.io"},
+    url: "/getNetwork",
+    data: { username : "nivo1000"},
     dataType: 'json'
   })
   .done(function(data) {
@@ -13,14 +13,22 @@ $(function(){
   });
 
   //Wait for a user submission
+  $('.signin').click(function(e) {
+    console.log(e);
+    $.ajax({
+      method: "GET",
+      url: "/authorize"
+    });
+  });
+
   $( ".submit" ).click(function(e) {
     e.preventDefault();
     $('.info').show();
     $('.failure').hide();
     $.ajax({
       method: "POST",
-      url: "/crawl",
-      data: { url : $("#url-value").val()},
+      url: "/getNetwork",
+      data: { username : $("#username").val()},
       dataType: 'json'
     }).done(function(data) {
       updateGraph(data);

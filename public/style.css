@@ -43,6 +43,10 @@ h1, h2, h3, h4, h5, h6 {
 	font-weight: 300;
 }
 
+h1 {
+  display: inline;
+}
+
 html,
 body {
 	height: 100%;
@@ -54,6 +58,11 @@ body {
 .nopadding {
 	padding: 0px !important;
 	margin: 0px;
+}
+
+.signin {
+  padding-left: 2em;
+  display: inline;
 }
 
 
