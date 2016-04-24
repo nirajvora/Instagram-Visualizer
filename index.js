@@ -40,11 +40,15 @@ app.get('/authorize', function ( request, response ) {
   });
 });
 
-app.get('/redirect', function ( request, response ) {
+app.get('/redirect', function ( req, response ) {
   console.log(response.req.query.code);
   var options = {
     url: "https://api.instagram.com/oauth/access_token",
-    method: 'PUT',
+    method: 'POST',
+    oauth: {
+      "client_id": process.env.CLIENT_ID,
+      "client_secret": process.env.CLIENT_SECRET
+    },
     json: {
       "client_id": process.env.CLIENT_ID,
       "client_secret": process.env.CLIENT_SECRET,
@@ -56,7 +60,7 @@ app.get('/redirect', function ( request, response ) {
 
   request(options, function ( error, response ) {
     if(error) { console.log(error); }
-    else { console.log(response); }
+    else { console.log(JSON.stringify(response)); }
   });
 });
 
@@ -64,6 +68,7 @@ app.post('/getNetwork', function ( request, response ) {
   var username = request.body.username;
   var id = process.env.CLIENT_ID;
   var secret = process.env.CLIENT_SECRET;
+  console.log("WE MADE IT");
   // request("http://www.sitepoint.com", function(error, response, body) {
   //   console.log(body);
   // });
