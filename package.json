@@ -6,9 +6,10 @@
   "dependencies": {
     "body-parser": "^1.14.1",
     "express": "^4.13.3",
+    "instagram-node": "^0.5.8",
     "node-env-file": "~0.1.8",
-    "request": "~2.69.0",
-    "open": "0.0.5"
+    "open": "0.0.5",
+    "request": "~2.69.0"
   },
   "scripts": {
     "start": "node index.js"
