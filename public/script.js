@@ -54,6 +54,9 @@ var generateBox = function(){
 };
 
 var updateGraph = function(mapData){
+
+  console.log(mapData);
+
   var url = mapData.url;
   var data = mapData.map;
 

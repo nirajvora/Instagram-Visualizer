@@ -7,6 +7,8 @@ var api = require('instagram-node').instagram();
 var env = require('node-env-file');
 var app = express();
 
+var accessToken = "";
+
 env(__dirname + '/process.env');
 
 app.use(express.static(__dirname + '/public'));
@@ -30,55 +32,40 @@ app.get('/authorize', function ( request, response ) {
     });
 });
 
-app.get('/redirect', function ( req, response ) {
+app.get('/redirect', function ( request, response ) {
 
-    api.authorize_user(response.req.query.code, redirect_uri, function(err, result) {
+    api.authorize_user(request.query.code, redirect_uri, function(err, result) {
         if (err) {
             console.log(err.body);
             res.send("Didn't work");
         } else {
-            console.log('Yay! Access token is ' + result.access_token);
-            response.send('You made it!!');
+            accessToken = result.access_token;
+            response.redirect('http://127.0.0.1:5000/');
         }
     });
-
-
-
-
-    //console.log(response.req.query.code);
-    //var options = {
-    //    url: "https://api.instagram.com/oauth/access_token",
-    //    method: 'POST',
-    //    oauth: {
-    //        "client_id": process.env.CLIENT_ID,
-    //        "client_secret": process.env.CLIENT_SECRET
-    //    },
-    //    json: {
-    //        "client_id": process.env.CLIENT_ID,
-    //        "client_secret": process.env.CLIENT_SECRET,
-    //        "grant_type" : "authorization_code",
-    //        "code" : response.req.query.code,
-    //        "redirect_uri" : 'http://127.0.0.1:5000/redirect'
-    //    }
-    //};
-    //
-    //request(options, function ( error, response ) {
-    //    if(error) { console.log(error); }
-    //    else { console.log(JSON.stringify(response)); }
-    //});
 });
 
 app.post('/getNetwork', function ( request, response ) {
+    var ig = require('instagram-node').instagram({});
+    ig.use({ access_token: accessToken });
+
     var username = request.body.username;
-    var id = process.env.CLIENT_ID;
-    var secret = process.env.CLIENT_SECRET;
-    console.log("WE MADE IT");
-    // request("http://www.sitepoint.com", function(error, response, body) {
-    //   console.log(body);
-    // });
+    console.log(username);
+
+    //ig.user_followers(username, function(err, users, pagination, remaining, limit) {
+    //    if(err) { console.log('ERROR', err) }
+    //    else {
+    //        console.log('USERS',users);
+    //        console.log('PAGEINATION',pagination);
+    //        console.log('REMAINING',remaining);
+    //        console.log('LIMIT',limit);
+    //    }
+    //});
+
 });
 
 //Start the server
 var port = process.env.PORT || 5000;
 console.log("Instagram Visualizer is listening on port", port);
 app.listen(port);
+
