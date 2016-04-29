@@ -25,11 +25,15 @@ var redirect_uri = 'http://127.0.0.1:5000/redirect';
 
 
 app.get('/authorize', function ( request, response ) {
-    open('https://api.instagram.com/oauth/authorize/?client_id='+process.env.CLIENT_ID+'&redirect_uri='+'http://127.0.0.1:5000/redirect'+'&response_type=code', function( error ) {
-        if(error) {
-            console.log(error);
-        }
+    open(api.get_authorization_url(redirect_uri, { scope: ['public_content', 'follower_list'] }), function( error ) {
+        if(error) { console.log(error); }
     });
+    response.end();
+    // open('https://api.instagram.com/oauth/authorize/?client_id='+process.env.CLIENT_ID+'&redirect_uri='+'http://127.0.0.1:5000/redirect'+'&response_type=code', function( error ) {
+    //     if(error) {
+    //         console.log(error);
+    //     }
+    // });
 });
 
 app.get('/redirect', function ( request, response ) {
@@ -37,10 +41,11 @@ app.get('/redirect', function ( request, response ) {
     api.authorize_user(request.query.code, redirect_uri, function(err, result) {
         if (err) {
             console.log(err.body);
-            res.send("Didn't work");
+            response.send("Didn't work");
         } else {
             accessToken = result.access_token;
             response.redirect('http://127.0.0.1:5000/');
+            response.end();
         }
     });
 });
@@ -52,16 +57,22 @@ app.post('/getNetwork', function ( request, response ) {
     var username = request.body.username;
     console.log(username);
 
-    //ig.user_followers(username, function(err, users, pagination, remaining, limit) {
-    //    if(err) { console.log('ERROR', err) }
-    //    else {
-    //        console.log('USERS',users);
-    //        console.log('PAGEINATION',pagination);
-    //        console.log('REMAINING',remaining);
-    //        console.log('LIMIT',limit);
-    //    }
-    //});
-
+    ig.user_search(username, {scope: 'public_content'}, function(err, users, remaining, limit) {
+        if(err) { console.log('ERROR', err) }
+        else {
+            console.log(users);
+            console.log(users[0].id);
+            ig.user_followers(users[0].id, {scope: 'follower_list'}, function(err, users, pagination, remaining, limit) {
+               if(err) { console.log('ERROR', err) }
+               else {
+                   console.log('USERS',users);
+                   console.log('PAGEINATION',pagination);
+                   console.log('REMAINING',remaining);
+                   console.log('LIMIT',limit);
+               }
+            });
+        }
+    });
 });
 
 //Start the server
