@@ -9,6 +9,7 @@ $(function(){
     dataType: 'json'
   })
   .done(function(data) {
+    console.log(data);
     updateGraph(data);
   });
 
@@ -31,7 +32,8 @@ $(function(){
       data: { username : $("#username").val()},
       dataType: 'json'
     }).done(function(data) {
-      updateGraph(data);
+      console.log(data);
+      // updateGraph(data);
     }).fail(function(error) {
       $('.failure').show();
     });
@@ -46,7 +48,7 @@ var generateBox = function(){
     .attr("class","col-md-8 col-md-offset-2 centered")
     .append("h2")
     .append("a")
-    .attr("id", "url-header");
+    .attr("id", "username-header");
 
   var svg = d3.select(".row").append("svg")
     .attr("width", width)
@@ -57,14 +59,16 @@ var updateGraph = function(mapData){
 
   console.log(mapData);
 
-  var url = mapData.url;
-  var data = mapData.map;
+  var username = mapData.username;
+  var user = {}
+  user[username] = ['self'];
+  var data = mapData.relations;
 
   var width = 800;
   var height = 400;
-  var header = d3.select("#url-header")
-    .text(url)
-    .attr('href',url);
+  var header = d3.select("#username-header")
+    .text(username)
+    .attr('href',username);
 
   var svg = d3.select("svg");
 
@@ -73,32 +77,57 @@ var updateGraph = function(mapData){
       .distance(50)
       .size([width, height]);
 
+      debugger;
   var edges = [];
-    data.links.forEach(function(e) { 
-    var sourceNode = data.nodes.filter(function(n) { return n.url === e.referer; })[0],
-    targetNode = data.nodes.filter(function(n) { return n.url === e.url; })[0];
-    if ((sourceNode !== undefined) && (targetNode !== undefined)){
-      edges.push({source: sourceNode, target: targetNode, value: 0});
+  var nodes = [];
+  nodes.push({name: username, group: 0});
+
+  
+  for(e in data) {
+    targ = {}
+    targ[e] = data[e];
+
+    var group = 1;
+    if(data[e] === 'follow') {
+      group === 1;
+    } else if (data[e] === 'follower') {
+      gorup === 2;
+    } else {
+      group === 3;
     }
-  });
+    nodes.push({name: e ,group: group});
+    edges.push({source: 0, target: nodes.length - 1, weight: 1});
+  };
+
+
+  console.log(edges);
+  console.log(nodes);
+
+  //   data.forEach(function(e) {
+  //   var sourceNode = data.nodes.filter(function(n) { return n.url === e.referer; })[0],
+  //   targetNode = data.nodes.filter(function(n) { return n.url === e.url; })[0];
+  //   edges.push({source: username, target: targetNode, value: 0});
+  // });
+
+  data[username] = ['self'];
 
   force
-      .nodes(data.nodes)
+      .nodes(nodes)
       .links(edges)
       .charge(-500)
       .start();
 
   var link = svg.selectAll(".link")
       .data(edges, function(d){
-        return d.source.url + "_" + d.target.url;
+        return d.source + "_" + d.target;
       });
 
     link.enter().append("line")
       .attr("class", "link");
 
   var node = svg.selectAll(".node")
-      .data(data.nodes, function(d){
-        return d.url;
+      .data(nodes, function(d){
+        return d.name;
       });
 
     node.enter().append("g")
@@ -109,17 +138,17 @@ var updateGraph = function(mapData){
 
   node.append("circle")
       .attr("class", "node")
-      .attr('fill', function(d){ return colorScale(d.depth); })
-      .attr("r", function(d){return 20 - 3*d.depth;});
+      .attr('fill', function(d){ return colorScale(d.group); })
+      .attr("r", function(d){return 10});
       
   node.append("svg:text")
       .attr("class", "nodetext")
       .attr("dx", 12)
       .attr("dy", "-5")
-      .text(function(d) { return d.url; });
+      .text(function(d) { return d.name; });
       
   node.on("dblclick", function(d){
-        window.location = d.url;
+        window.location = d.name;
       });
 
   //Remove old nodes

@@ -51,27 +51,35 @@ app.get('/redirect', function ( request, response ) {
 });
 
 app.post('/getNetwork', function ( request, response ) {
-    var ig = require('instagram-node').instagram({});
-    ig.use({ access_token: accessToken });
-
     var username = request.body.username;
     console.log(username);
 
-    ig.user_search(username, {scope: 'public_content'}, function(err, users, remaining, limit) {
-        if(err) { console.log('ERROR', err) }
-        else {
-            console.log(users);
-            console.log(users[0].id);
-            ig.user_followers(users[0].id, {scope: 'follower_list'}, function(err, users, pagination, remaining, limit) {
-               if(err) { console.log('ERROR', err) }
-               else {
-                   console.log('USERS',users);
-                   console.log('PAGEINATION',pagination);
-                   console.log('REMAINING',remaining);
-                   console.log('LIMIT',limit);
-               }
-            });
+    var storage = {
+        user: username,
+        follows: null,
+        followers: null
+    };
+
+    getUserInfo( username, storage, function( ) {
+        var relations = {};
+        var follows = storage.follows, followers = storage.followers;
+
+        for(var i = 0; i < follows.length; i++) {
+            relations[follows[i].username] = ['follow'];
         }
+
+        for(var i = 0; i < followers.length; i++) {
+            if(followers[i].username in relations) {
+                relations[followers[i].username][0] = 'both';
+            } else {
+                relations[followers[i].username] = ['follower'];
+            }
+        }
+        
+        response.send({
+            username: username,
+            relations: relations
+        });
     });
 });
 
@@ -80,3 +88,48 @@ var port = process.env.PORT || 5000;
 console.log("Instagram Visualizer is listening on port", port);
 app.listen(port);
 
+var getUserInfo = function( username, storage, callback ) {
+    var ig = require('instagram-node').instagram({});
+    ig.use({ access_token: accessToken });
+
+    var userId = null;
+
+    ig.user_search(username, {scope: 'public_content'}, function(err, users, remaining, limit) {
+        if(err) { console.log('ERROR ID REQUEST', err) }
+        else {
+            console.log(users);
+            console.log(users[0].id);
+            userId = users[0].id;
+
+            //CALLBACK REQUEST 1
+            ig.user_follows(userId, {scope: 'follower_list'}, function(err, users, pagination, remaining, limit) {
+               if(err) {
+                   console.log('ERROR 1', username, err);
+               } else {
+                   console.log('USERS',users);
+                   console.log('REMAINING',remaining);
+                   console.log('LIMIT',limit);
+                   storage.follows = users;
+
+                   //CALLBACK REQUEST 2
+                   ig.user_followers(userId, {scope: 'follower_list'}, function(err, users, pagination, remaining, limit) {
+                      if(err) {
+                          console.log('ERROR 2', username, err);
+                      } else {
+                          console.log('USERS',users);
+                          console.log('REMAINING',remaining);
+                          console.log('LIMIT',limit);
+                          storage.followers = users;
+
+
+                          if(callback) { callback(); };
+
+                      }
+                   });
+
+               }
+            });
+        }
+    });
+
+};
